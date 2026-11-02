@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { resolveNewDiagramFolder } from '../src/file/createDiagram';
 
-const settings = (location: 'root' | 'current' | 'folder', folder = '') =>
+const settings = (location: 'root' | 'current' | 'current-subfolder' | 'folder', folder = '') =>
   ({ newDiagramLocation: location, newDiagramFolder: folder });
 
 describe('resolveNewDiagramFolder', () => {
@@ -24,6 +24,19 @@ describe('resolveNewDiagramFolder', () => {
 
   it('folder mode uses the configured folder', () => {
     expect(resolveNewDiagramFolder(settings('folder', 'Diagrams'), 'Notes')).toBe('Diagrams');
+  });
+
+  it('creates attachments relative to the note, with or without a parent folder', () => {
+    expect(resolveNewDiagramFolder(settings('current-subfolder'), 'Notes/Daily')).toBe('Notes/Daily/attachments');
+    expect(resolveNewDiagramFolder(settings('current-subfolder'), '/')).toBe('attachments');
+    expect(resolveNewDiagramFolder(settings('current-subfolder'), null)).toBe('attachments');
+  });
+
+  it('allows a custom nested subfolder and defaults empty input to attachments', () => {
+    expect(resolveNewDiagramFolder({ ...settings('current-subfolder'), newDiagramSubfolder: 'assets/drawio' }, 'Notes'))
+      .toBe('Notes/assets/drawio');
+    expect(resolveNewDiagramFolder({ ...settings('current-subfolder'), newDiagramSubfolder: '  ' }, 'Notes'))
+      .toBe('Notes/attachments');
   });
 
   it('folder mode with an empty setting resolves to root', () => {

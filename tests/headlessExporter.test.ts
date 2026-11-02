@@ -63,7 +63,7 @@ describe('exportDiagramXml (headless drawio export)', () => {
     expect(JSON.parse(load!)).toMatchObject({ action: 'load', xml: XML });
 
     dispatch({ event: 'load' });
-    expect(posts).toContainEqual(JSON.stringify({ action: 'export', format: 'svg' }));
+    expect(posts).toContainEqual(JSON.stringify({ action: 'export', format: 'svg', border: 24 }));
 
     dispatch({ event: 'export', format: 'svg', data: SVG_URI });
     await expect(promise).resolves.toBe(SVG_URI);
@@ -73,9 +73,23 @@ describe('exportDiagramXml (headless drawio export)', () => {
     const deps = makeDeps();
     const { promise, posts, dispatch } = await start('png', deps);
     dispatch({ event: 'load' });
-    expect(posts).toContainEqual(JSON.stringify({ action: 'export', format: 'png', scale: 2 }));
+    expect(posts).toContainEqual(JSON.stringify({ action: 'export', format: 'png', border: 24, scale: 2 }));
     dispatch({ event: 'export', format: 'png', data: 'data:image/png;base64,AA==' });
     await expect(promise).resolves.toBe('data:image/png;base64,AA==');
+  });
+
+  it.each(['svg', 'png'] as const)('uses the current margin when exporting %s', async (format) => {
+    const deps = makeDeps();
+    let border = 32;
+    deps.exportBorder = () => border;
+    const { promise, posts, dispatch } = await start(format, deps);
+    border = 0;
+    dispatch({ event: 'load' });
+    expect(posts.map((p) => JSON.parse(p))).toContainEqual({
+      action: 'export', format, border: 0, ...(format === 'png' ? { scale: 2 } : {}),
+    });
+    dispatch({ event: 'export', data: SVG_URI });
+    await promise;
   });
 
   it('cleans up the DOM, the listener, and the server pin after success', async () => {

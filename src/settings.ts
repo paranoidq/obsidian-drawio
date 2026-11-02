@@ -1,5 +1,5 @@
 export type DrawioMode = 'online' | 'offline' | 'custom';
-export type NewDiagramLocation = 'root' | 'current' | 'folder';
+export type NewDiagramLocation = 'root' | 'current' | 'current-subfolder' | 'folder';
 /** File format for newly created diagrams: plain XML, or a dual-format image
  * (standard SVG/PNG with the diagram XML embedded — renders as an image
  * everywhere, editable here). */
@@ -19,9 +19,13 @@ export interface DrawioSettings {
   newDiagramLocation: NewDiagramLocation;
   /** Target folder for new diagrams when newDiagramLocation is 'folder'. */
   newDiagramFolder: string;
+  /** Folder relative to the source note for current-subfolder mode. */
+  newDiagramSubfolder: string;
   newDiagramFormat: NewDiagramFormat;
   /** Raster resolution used when saving and exporting PNG diagrams. */
   pngExportScale: number;
+  /** Padding on every side of saved and exported SVG/PNG images, in pixels. */
+  exportBorder: number;
   previewAlignment: PreviewAlignment;
   /** Desktop: open .drawio files as a static preview instead of the editor. */
   readonlyFileView: boolean;
@@ -46,8 +50,10 @@ export const DEFAULT_SETTINGS: DrawioSettings = {
   showLibraries: true,
   newDiagramLocation: 'root',
   newDiagramFolder: '',
+  newDiagramSubfolder: 'attachments',
   newDiagramFormat: 'drawio',
   pngExportScale: 2,
+  exportBorder: 24,
   previewAlignment: 'center',
   readonlyFileView: false,
   previewClickAction: 'editor',

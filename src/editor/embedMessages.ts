@@ -11,9 +11,10 @@ export function buildLoadMessage(xml: string, opts: { dark: boolean }): string {
   return JSON.stringify({ action: 'load', xml, autosave: 1, modified: 0, dark: opts.dark });
 }
 
-export function buildExportMessage(format: 'svg' | 'png' | 'xmlsvg' | 'xmlpng', pngScale = 2): string {
+export function buildExportMessage(format: 'svg' | 'png' | 'xmlsvg' | 'xmlpng', pngScale = 2, exportBorder = 24): string {
   const scale = Number.isFinite(pngScale) && pngScale >= 1 && pngScale <= 4 ? pngScale : 2;
-  return JSON.stringify({ action: 'export', format,
+  const border = Number.isSafeInteger(exportBorder) && exportBorder >= 0 ? exportBorder : 24;
+  return JSON.stringify({ action: 'export', format, border,
     ...(format === 'png' || format === 'xmlpng' ? { scale } : {}),
   });
 }

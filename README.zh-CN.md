@@ -35,16 +35,18 @@
 
 | 载体 | 创建 | 编辑 |
 | --- | --- | --- |
-| **代码块** | 在任意笔记中添加 `` ```drawio `` 代码块（可留空，或粘贴 drawio XML） | 点击预览（见 **Preview click action**；默认：全屏编辑器） |
+| **代码块** | 在任意笔记中添加 `` ```drawio `` 代码块（可留空，或粘贴 drawio XML） | 点击预览（见 **Preview click action**；默认：悬浮编辑器） |
 | **`.drawio` 文件** | 侧边栏按钮 / **Create new diagram** 命令 / 文件夹右键菜单 | 编辑器直接嵌入文件的标签页 |
-| **嵌入** | 在任意笔记中写 `![[your-diagram.drawio]]` | 点击预览（见 **Preview click action**；默认：快速编辑模态框） |
+| **嵌入** | 在任意笔记中写 `![[your-diagram.drawio]]` | 点击预览（见 **Preview click action**；默认：悬浮编辑器） |
 | **`.drawio.svg` / `.drawio.png` 文件** | 同样的入口，先设置 **New diagram format** | 点击嵌入、图片页签上的 **Edit**，或右键 → **Edit drawio diagram** |
 
-代码块和 `.drawio` 嵌入在编辑视图和阅读视图中渲染为 SVG 预览。双格式文件显示为原生图片。每次编辑都会自动保存回其源头 —— 代码块的 XML 或图表文件。有对应文件的嵌入会在底层文件变化时自动重新渲染。
+代码块语言标记 `drawio` 和 `dio` 等价，均支持预览、编辑、转换命令和保存为 SVG 嵌入。
+
+代码块和 `.drawio` 嵌入在编辑视图和阅读视图中渲染为 SVG 预览。此本地修改版的空 `drawio` 代码块显示 **Create drawio SVG diagram** 按钮。点击打开编辑器，首次保存或自动保存时按 **New diagram location** 创建 `<笔记名> diagram.drawio.svg`，并将整个代码块替换为图片嵌入，例如 `![[attachments/Note diagram.drawio.svg]]`。已有 XML 的代码块编辑后也会进行同样的转换，并保留图表内容。不保存直接关闭时，代码块保持不变。后续编辑更新 SVG 文件，图片内保留可编辑的 drawio 数据，嵌入预览自动刷新。
 
 **点击预览（桌面端）：** **设置 → Drawio → Preview click action** 决定点击预览时发生什么：
 
-- **Open built-in editor**（默认）—— 代码块预览打开全屏编辑器；嵌入打开快速编辑模态框。
+- **Open built-in editor**（默认）—— 打开悬浮编辑器。拖动标题栏可移动，拖动右下角可调整大小，也可使用最小化、最大化和关闭按钮。点击文件或切换笔记时，编辑器保持打开并继续自动保存。再次点击同一图表会恢复已有窗口。
 - **Open in system default app** —— 用系统默认应用打开对应的 `.drawio` 文件。代码块没有对应文件，因此仍会打开内置编辑器。
 - **Interactive viewer** —— 在原位浏览图表（滚轮/触控板缩放、拖拽平移、**Fit**、**Full screen**）。要改图时点 **Edit**；**Edit button action** 决定它打开内置编辑器还是系统默认应用（代码块始终使用内置编辑器）。拖动代码块或嵌入预览下方的手柄可调整高度 —— 按笔记中的每一处插入单独记住（该代码块或嵌入上方会写入 `<!-- drawio-viewer: height=N -->` 注释），并在实时预览与阅读视图之间保持同步。
 - **Do nothing** —— 预览不可点击。
@@ -72,7 +74,7 @@
 | 多页翻页控件与 `#Page-N` 嵌入 | 是 | 是 | 是 |
 | 跟随亮色/暗色主题 | 是 | 是 | 是 |
 | 交互式预览（缩放 / 平移 / 全屏） | 是 | — | — |
-| 编辑图表（模态框 / 内联编辑器） | 是 | — | — |
+| 编辑图表（悬浮 / 内联编辑器） | 是 | — | — |
 | 创建图表（侧边栏、命令、文件夹菜单） | 是 | — | — |
 | 离线编辑器（打包 webapp + 本地服务器） | 是 | — | — |
 | 迁移旧 Diagrams 插件的 `.svg` 文件 | 是 | — | — |
@@ -83,13 +85,17 @@
 
 ## 设置
 
+此本地修改版以 **obsidian-drawio-dev** 安装，与社区版 **Drawio** 插件区分。
+
 | 设置项 | 说明 |
 | --- | --- |
 | **Editor source**（编辑器来源） | **Offline**（打包 webapp，默认）、**Online**（diagrams.net），或 **Custom URL**（自定义 URL）。Offline 需要完成下文的一次性安装 —— 没有自动回退。 |
 | **Custom drawio URL**（自定义 drawio URL） | 当 Editor source 为 “Custom URL” 时使用（例如 `https://embed.diagrams.net/`）。 |
-| **New diagram location**（新图表位置） | 命令和侧边栏按钮创建图表的位置：库根目录（默认）、当前笔记所在文件夹，或固定文件夹（不存在则创建）。文件夹右键菜单始终在被点击的文件夹中创建。 |
+| **New diagram location**（新图表位置） | 命令、侧边栏按钮和代码块编辑创建图表的位置：库根目录（默认）、当前笔记所在文件夹、**Subfolder of current note**（当前笔记子文件夹），或固定文件夹（不存在则创建）。文件夹右键菜单始终在被点击的文件夹中创建。 |
+| **New diagram subfolder**（新图表子文件夹） | 选择 **Subfolder of current note** 时显示。相对文件夹名默认为 `attachments`，例如 `Notes/note.md` 的图表会存入 `Notes/attachments/`。支持 `assets/drawio` 等嵌套路径。 |
 | **New diagram format**（新图表格式） | `.drawio`（纯 XML，默认）、`.drawio.svg` 或 `.drawio.png` —— 后两者是内嵌图表数据的标准图片，随处可看，在此可编辑。 |
 | **PNG export scale**（PNG 导出倍率） | 保存 `.drawio.png` 和导出 PNG 时的分辨率：1×、2×（默认）、3× 或 4×。倍率越高，图片越清晰、尺寸越大。选择 1× 可保留此前的分辨率。 |
+| **Export margin (pixels)**（导出外边距） | SVG/PNG 图片四周的留白，也适用于 `.drawio.svg` / `.drawio.png` 的保存和自动保存。默认 24，支持非负整数，设为 0 可取消留白。修改后在下次保存或使用插件导出时生效，不会自动重写已有图片。 |
 | **Open diagram files read-only**（以只读方式打开图表文件） | 桌面端：打开 `.drawio` 文件时显示静态预览而非内嵌编辑器 —— 适用于以 drawio-desktop 为中心的工作流。对新打开的标签页生效。 |
 | **Preview click action**（预览点击行为） | 桌面端：点击预览的行为 —— **Open built-in editor**（默认）、**Open in system default app**、**Interactive viewer**，或 **Do nothing**。代码块没有对应文件，因此“用系统默认应用打开”会回退到内置编辑器。 |
 | **Edit button action**（编辑按钮行为） | 桌面端：仅在 **Preview click action** 为 **Interactive viewer** 时显示。控制交互预览里 **Edit** 对有文件的图表做什么 —— 内置编辑器或系统默认应用。代码块始终使用内置编辑器。 |

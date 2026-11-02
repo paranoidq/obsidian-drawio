@@ -12,6 +12,8 @@ import { EMPTY_DIAGRAM } from '../constants';
 export class DualFormatFileSource implements ExportingSource {
   constructor(private app: App, private file: TFile, private format: DualFormat) {}
 
+  key(): string { return this.file.path; }
+
   title(): string {
     // basename of "a.drawio.svg" is "a.drawio" — drop the inner suffix too.
     const n = this.file.basename;

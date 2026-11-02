@@ -8,12 +8,14 @@ import {
   readCodeBlockViewportHeight, writeCodeBlockViewportHeight,
 } from '../preview/viewportHeight';
 import { getDiagramPages, ensureMxfile } from '../model/xmlUtils';
-import { CodeBlockSource } from './CodeBlockSource';
+import { CodeBlockSvgSource } from './CodeBlockSvgSource';
 import type DrawioPlugin from '../main';
 
 export function registerDrawioCodeBlock(plugin: DrawioPlugin) {
-  plugin.registerMarkdownCodeBlockProcessor('drawio', (source, el, ctx) =>
-    renderCodeBlock(plugin, source, el, ctx));
+  for (const language of ['drawio', 'dio']) {
+    plugin.registerMarkdownCodeBlockProcessor(language, (source, el, ctx) =>
+      renderCodeBlock(plugin, source, el, ctx));
+  }
 }
 
 async function renderCodeBlock(
@@ -22,6 +24,18 @@ async function renderCodeBlock(
   el: HTMLElement,
   ctx: MarkdownPostProcessorContext,
 ): Promise<void> {
+  if (!source.trim()) {
+    const wrapper = el.createDiv({ cls: 'drawio-codeblock' });
+    const button = wrapper.createEl('button', {
+      cls: 'drawio-create-svg',
+      text: Platform.isDesktopApp ? 'Create drawio SVG diagram' : 'Drawio diagram — create on desktop',
+    });
+    button.disabled = !Platform.isDesktopApp;
+    button.addEventListener('click', () => {
+      plugin.openEditor(new CodeBlockSvgSource(plugin, ctx, el, source));
+    });
+    return;
+  }
   const action = resolveClickAction(plugin.settings.previewClickAction, 'codeblock');
   let initialHeight: number | null = null;
   if (Platform.isDesktopApp && action.kind === 'interactive') {
@@ -80,7 +94,7 @@ async function renderCodeBlock(
         onEdit: () => {
           const editAction = resolveEditButtonAction(plugin.settings.editButtonAction, 'codeblock');
           if (editAction.kind === 'editor') {
-            plugin.openEditor(new CodeBlockSource(plugin.app, ctx, el, source));
+            plugin.openEditor(new CodeBlockSvgSource(plugin, ctx, el, source));
           }
         },
       });
@@ -99,7 +113,7 @@ async function renderCodeBlock(
     }
     const current = resolveClickAction(plugin.settings.previewClickAction, 'codeblock');
     if (current.kind === 'editor') {
-      plugin.openEditor(new CodeBlockSource(plugin.app, ctx, el, source));
+      plugin.openEditor(new CodeBlockSvgSource(plugin, ctx, el, source));
     }
   });
 }

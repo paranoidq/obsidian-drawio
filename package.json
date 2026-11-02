@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-drawio",
+  "name": "obsidian-drawio-dev",
   "version": "0.1.0",
   "description": "Embed, preview and edit drawio diagrams in Obsidian, fully offline.",
   "main": "main.js",

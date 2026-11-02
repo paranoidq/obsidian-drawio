@@ -139,9 +139,43 @@ body.drawio-align-left .drawio-preview > svg { margin: 0; }
 .drawio-migrate-list li { margin: 4px 0; }
 .drawio-migrate-links { color: var(--text-muted); }
 
-/* ---- Modal editor (code blocks & embeds) ---- */
-.drawio-modal { width: 90vw; height: 90vh; max-width: none; }
-.drawio-modal .modal-content { height: 100%; padding: 0; }
+/* ---- Floating editor: no backdrop or focus trap; workspace stays usable. ---- */
+.drawio-floating-layer {
+  position: fixed; inset: 0; pointer-events: none;
+  z-index: var(--layer-popover, 40);
+}
+.drawio-floating-editor {
+  position: absolute; display: flex; flex-direction: column; pointer-events: auto;
+  overflow: hidden; border: 1px solid var(--background-modifier-border);
+  border-radius: 8px; background: var(--background-primary);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, .3); outline: none;
+}
+.drawio-floating-header {
+  display: flex; align-items: center; justify-content: space-between;
+  flex: 0 0 40px; min-height: 0; padding: 0 6px 0 12px; gap: 12px;
+  background: var(--background-secondary); border-bottom: 1px solid var(--background-modifier-border);
+  cursor: grab; user-select: none; touch-action: none;
+}
+.drawio-floating-header:focus-visible { outline: 2px solid var(--interactive-accent); outline-offset: -2px; }
+.drawio-floating-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-ui-small); font-weight: 600; }
+.drawio-floating-controls { display: flex; align-items: center; gap: 2px; }
+.drawio-floating-button {
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  padding: 4px; width: 28px; height: 28px; background: transparent; box-shadow: none;
+  border: none; color: var(--text-muted); cursor: pointer;
+}
+.drawio-floating-button:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.drawio-floating-button svg { width: 16px; height: 16px; }
+.drawio-floating-content { flex: 1 1 0; min-height: 0; overflow: hidden; }
+.drawio-floating-resize {
+  position: absolute; bottom: 0; right: 0; width: 16px; height: 16px;
+  cursor: nwse-resize; touch-action: none;
+  background: linear-gradient(135deg, transparent 60%, var(--text-muted) 62%, transparent 68%, var(--text-muted) 72%, transparent 78%);
+}
+.drawio-floating-editor.is-minimized .drawio-floating-content,
+.drawio-floating-editor.is-minimized .drawio-floating-resize,
+.drawio-floating-editor.is-maximized .drawio-floating-resize { display: none; }
+.drawio-floating-shield { position: absolute; inset: 0; pointer-events: auto; touch-action: none; }
 .drawio-iframe { width: 100%; height: 100%; border: none; display: block; }
 
 /* ---- Headless export (HeadlessExporter) ---- */

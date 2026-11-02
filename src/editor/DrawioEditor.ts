@@ -11,6 +11,7 @@ export interface DrawioEditorDeps {
   isDark(): boolean;
   showLibraries(): boolean;
   pngExportScale?(): number;
+  exportBorder?(): number;
   /** Pin/unpin the local server so it isn't idle-stopped while editing. */
   acquireServer(): void;
   releaseServer(): void;
@@ -28,7 +29,7 @@ const DEFAULT_EXPORT_TIMEOUT_MS = 15_000;
 
 /**
  * Reusable drawio editor surface: an <iframe> loading the drawio webapp in embed
- * mode, speaking the postMessage JSON protocol. Used both by the modal (code blocks
+ * mode, speaking the postMessage JSON protocol. Used both by the floating editor (code blocks
  * / embeds) and inline in the .drawio file view. The container is filled with the
  * iframe; the editor pins the local server for its lifetime.
  */
@@ -202,7 +203,7 @@ export class DrawioEditor {
     this.clearExportTimer();
     this.exportTimer = window.setTimeout(() => { void this.onExportTimeout(); },
       this.options.exportTimeoutMs ?? DEFAULT_EXPORT_TIMEOUT_MS);
-    this.post(buildExportMessage(this.source.exportFormat(), this.deps.pngExportScale?.()));
+    this.post(buildExportMessage(this.source.exportFormat(), this.deps.pngExportScale?.(), this.deps.exportBorder?.()));
   }
 
   /** Also orders teardown fallbacks after an image write already in flight. */
@@ -286,7 +287,7 @@ export class DrawioEditor {
   destroy(): void {
     this.destroyed = true;
     this.clearExportTimer();
-    // Torn down while an export round-trip is in flight (e.g. the modal
+    // Torn down while an export round-trip is in flight (e.g. the floating editor
     // closed right after an autosave): the reply will never arrive, so
     // persist the last known XML now. The vault write survives the teardown;
     // only the image part stays stale until the next editor save.

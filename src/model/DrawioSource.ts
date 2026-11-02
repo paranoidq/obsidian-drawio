@@ -1,5 +1,7 @@
 /** A thing that can be edited in the drawio editor: a code block or a file. */
 export interface DrawioSource {
+  /** Stable identity for file-backed sources, to reuse an open editor. */
+  key?(): string | null;
   /** Human label for the modal title. */
   title(): string;
   /** Current XML. */

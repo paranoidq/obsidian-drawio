@@ -1,6 +1,6 @@
 export interface BlockRange { start: number; end: number; } // 0-based fence line indices
 
-const OPEN_RE = /^\s*(```+|~~~+)\s*drawio\s*$/;
+const OPEN_RE = /^\s*(```+|~~~+)\s*(?:drawio|dio)\s*$/;
 const CLOSE_RE = /^\s*(```+|~~~+)\s*$/;
 
 /** Drop a trailing CR so CRLF notes compare equal to the LF text Obsidian hands processors. */

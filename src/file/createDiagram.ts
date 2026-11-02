@@ -15,19 +15,25 @@ function normalizeFolderPath(path: string): string {
  * location setting and the active file's parent path (null when no file is open).
  */
 export function resolveNewDiagramFolder(
-  settings: Pick<DrawioSettings, 'newDiagramLocation' | 'newDiagramFolder'>,
+  settings: Pick<DrawioSettings, 'newDiagramLocation' | 'newDiagramFolder'> & Partial<Pick<DrawioSettings, 'newDiagramSubfolder'>>,
   activeFileParentPath: string | null,
 ): string {
   switch (settings.newDiagramLocation) {
     case 'current': return normalizeFolderPath(activeFileParentPath ?? '');
+    case 'current-subfolder': return normalizeFolderPath(
+      `${activeFileParentPath ?? ''}/${settings.newDiagramSubfolder?.trim() || 'attachments'}`,
+    );
     case 'folder': return normalizeFolderPath(settings.newDiagramFolder);
     default: return '';
   }
 }
 
 /** Create missing folders segment by segment. */
-async function ensureFolderExists(plugin: DrawioPlugin, path: string): Promise<boolean> {
+export async function ensureFolderExists(plugin: DrawioPlugin, path: string): Promise<boolean> {
   if (!path) return true;
+  if (path.split('/').some((segment) => segment === '.' || segment === '..')) {
+    throw new Error('The diagram folder must stay inside the vault; use folder names without . or .. segments.');
+  }
   let current = '';
   for (const segment of path.split('/')) {
     current = current ? `${current}/${segment}` : segment;
@@ -37,7 +43,12 @@ async function ensureFolderExists(plugin: DrawioPlugin, path: string): Promise<b
       new Notice(`Drawio: "${current}" already exists but is not a folder.`);
       return false;
     }
-    await plugin.app.vault.createFolder(current);
+    try {
+      await plugin.app.vault.createFolder(current);
+    } catch (err) {
+      // Another diagram may have created this folder while we awaited.
+      if (!(plugin.app.vault.getAbstractFileByPath(current) instanceof TFolder)) throw err;
+    }
   }
   return true;
 }
@@ -75,7 +86,7 @@ export async function createNewDiagram(plugin: DrawioPlugin, folderOverride?: TF
       await leaf.openFile(file);
     } else {
       // Dual-format files open in Obsidian's own image view, so go straight
-      // to the modal editor instead; the image body fills in on first save.
+      // to the floating editor instead; the image body fills in on first save.
       plugin.openEditor(new DualFormatFileSource(plugin.app, file, format));
     }
   } catch (err) {

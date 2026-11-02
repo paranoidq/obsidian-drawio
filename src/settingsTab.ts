@@ -77,9 +77,20 @@ export class DrawioSettingTab extends PluginSettingTab {
         .addDropdown((d) => d
           .addOption('root', 'Vault root')
           .addOption('current', 'Same folder as current note')
+          .addOption('current-subfolder', 'Subfolder of current note')
           .addOption('folder', 'Folder specified below')
           .setValue(s.newDiagramLocation)
           .onChange((v) => { s.newDiagramLocation = v as NewDiagramLocation; save(); this.display(); }));
+
+      if (s.newDiagramLocation === 'current-subfolder') {
+        new Setting(containerEl)
+          .setName('New diagram subfolder')
+          .setDesc('Relative to the note containing the diagram, e.g. attachments creates Notes/attachments for Notes/note.md. Created automatically. Also used for drawio code blocks saved as SVG files.')
+          .addText((t) => t
+            .setPlaceholder('attachments')
+            .setValue(s.newDiagramSubfolder)
+            .onChange((v) => { s.newDiagramSubfolder = v; save(); }));
+      }
 
       new Setting(containerEl)
         .setName('New diagram format')
@@ -105,6 +116,24 @@ export class DrawioSettingTab extends PluginSettingTab {
           .addOption('4', '4×')
           .setValue(String(s.pngExportScale))
           .onChange((v) => { s.pngExportScale = Number(v); save(); }));
+
+      new Setting(containerEl)
+        .setName('Export margin (pixels)')
+        .setDesc('Padding on all four sides when saving, autosaving, or exporting SVG/PNG images. Default: 24. Set to 0 for no margin. Applies on the next save or export.')
+        .addText((t) => {
+          t.inputEl.type = 'number';
+          t.inputEl.min = '0';
+          t.inputEl.step = '1';
+          t.setPlaceholder('24')
+            .setValue(String(s.exportBorder))
+            .onChange((raw) => {
+              if (!raw.trim()) return;
+              const v = Number(raw);
+              if (!Number.isSafeInteger(v) || v < 0) return;
+              s.exportBorder = v;
+              save();
+            });
+        });
 
       // Target folder, only relevant when the location is a fixed folder.
       if (s.newDiagramLocation === 'folder') {

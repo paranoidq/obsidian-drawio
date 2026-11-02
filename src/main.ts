@@ -8,7 +8,7 @@ import {
 import type { BlockExtraction, EmbedConversion } from './model/blockFileConvert';
 import { DrawioSettings, DEFAULT_SETTINGS } from './settings';
 import type { ServerManager } from './server/ServerManager';
-import { DrawioModal } from './editor/DrawioModal';
+import { DrawioFloatingEditor } from './editor/DrawioFloatingEditor';
 import type { DrawioEditorDeps } from './editor/DrawioEditor';
 import type { DrawioSource } from './model/DrawioSource';
 import type { RenderOptions } from './preview/ViewerRenderer';
@@ -17,6 +17,7 @@ import { DRAWIO_VIEW_TYPE, DRAWIO_FILE_EXT, ONLINE_DRAWIO_URL } from './constant
 export default class DrawioPlugin extends Plugin {
   settings!: DrawioSettings;
   server: ServerManager | null = null;
+  private floatingEditors = new Set<DrawioFloatingEditor>();
   /** Offline-webapp install state — on the plugin (not the settings tab) so a
    * mid-install settings re-render can re-attach to the running install. */
   webappInstallStatus = new InstallStatus();
@@ -70,6 +71,7 @@ export default class DrawioPlugin extends Plugin {
   }
 
   onunload() {
+    for (const editor of this.floatingEditors) editor.close();
     // Don't detach the plugin's leaves here: doing so resets the view to its
     // default location on next load, discarding where the user moved it. The
     // local server is stopped via the cleanup registered in onload().
@@ -157,13 +159,19 @@ export default class DrawioPlugin extends Plugin {
       isDark: () => this.settings.followObsidianTheme && this.isDark(),
       showLibraries: () => this.settings.showLibraries,
       pngExportScale: () => this.settings.pngExportScale,
+      exportBorder: () => this.settings.exportBorder,
       acquireServer: () => this.server!.acquire(),
       releaseServer: () => this.server!.release(),
     };
   }
 
   openEditor(source: DrawioSource) {
-    new DrawioModal(this.app, source, this.editorDeps()).open();
+    for (const editor of this.floatingEditors) {
+      if (editor.isFor(source)) { editor.focus(); return; }
+    }
+    const editor = new DrawioFloatingEditor(source, this.editorDeps(), () => this.floatingEditors.delete(editor));
+    this.floatingEditors.add(editor);
+    editor.open();
   }
 
   async loadSettings() {

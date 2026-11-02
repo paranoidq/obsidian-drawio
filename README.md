@@ -35,16 +35,18 @@ The editor needs one of: the offline editor installed (one click in settings, ~5
 
 | Surface | Create | Edit |
 | --- | --- | --- |
-| **Code block** | Add a `` ```drawio `` block in any note (start empty, or paste drawio XML) | Click the preview (see **Preview click action**; default: full-screen editor) |
+| **Code block** | Add a `` ```drawio `` block in any note (start empty, or paste drawio XML) | Click the preview (see **Preview click action**; default: floating editor) |
 | **`.drawio` file** | Ribbon button / **Create new diagram** command / folder context menu | Editor embedded directly in the file's tab |
-| **Embed** | `![[your-diagram.drawio]]` in any note | Click the preview (see **Preview click action**; default: quick-edit modal) |
+| **Embed** | `![[your-diagram.drawio]]` in any note | Click the preview (see **Preview click action**; default: floating editor) |
 | **`.drawio.svg` / `.drawio.png` file** | Same entry points, after setting **New diagram format** | Click the embed, the **Edit** button on the image tab, or right-click → **Edit drawio diagram** |
 
-Code blocks and `.drawio` embeds render as SVG previews in both editing and reading views. Dual-format files display as native images. Every edit autosaves back to its source — the code block's XML or the diagram file. File-backed embeds re-render automatically when the underlying file changes.
+The code-block language tags `drawio` and `dio` are equivalent, including preview, editing, conversion commands, and saving as an SVG embed.
+
+Code blocks and `.drawio` embeds render as SVG previews in both editing and reading views. In this local fork, an empty `drawio` block shows **Create drawio SVG diagram**. Clicking it opens the editor; the first save or autosave creates `<note name> diagram.drawio.svg` at **New diagram location** and replaces the entire block with an image embed such as `![[attachments/Note diagram.drawio.svg]]`. Editing an existing XML block follows the same conversion and preserves its diagram. Closing without saving leaves the block unchanged. Subsequent edits update the SVG file, which retains its editable drawio data; file-backed embeds refresh automatically.
 
 **Clicking a preview (desktop):** **Settings → Drawio → Preview click action** chooses what a click does:
 
-- **Open built-in editor** (default) — a code-block preview opens the full-screen editor; an embed opens the quick-edit modal.
+- **Open built-in editor** (default) — opens a floating editor. Drag its title bar to move it, drag the bottom-right corner to resize, or use the minimize/maximize/close controls. Clicking files and switching notes keeps the editor open and autosaving. Clicking the same diagram again restores its existing window.
 - **Open in system default app** — opens the underlying `.drawio` file in the OS default application. Code blocks have no file, so they still open the built-in editor.
 - **Interactive viewer** — explore the diagram in place (wheel/trackpad zoom, drag to pan, **Fit**, **Full screen**). Use **Edit** when you want to change it; **Edit button action** chooses whether that opens the built-in editor or the system default app (code blocks always use the built-in editor). Drag the handle under a code-block or embed preview to set its height — remembered per insertion in the note (a `<!-- drawio-viewer: height=N -->` comment above that block or embed), and kept in sync between Live Preview and Reading view.
 - **Do nothing** — the preview is not clickable.
@@ -72,7 +74,7 @@ The interactive viewer works on `` ```drawio `` blocks, `![[file.drawio]]` embed
 | Multi-page page switcher & `#Page-N` embeds | Yes | Yes | Yes |
 | Light/dark theme following | Yes | Yes | Yes |
 | Interactive viewer (zoom / pan / full screen) | Yes | — | — |
-| Editing diagrams (modal / inline editor) | Yes | — | — |
+| Editing diagrams (floating / inline editor) | Yes | — | — |
 | Creating diagrams (ribbon, command, folder menu) | Yes | — | — |
 | Offline editor (bundled webapp + local server) | Yes | — | — |
 | Migrate old Diagrams-plugin `.svg` files | Yes | — | — |
@@ -83,13 +85,17 @@ Phones and tablets behave identically: previews everywhere, no editing. Tapping 
 
 ## Settings
 
+This local fork is installed as **obsidian-drawio-dev**, separately from the community **Drawio** plugin.
+
 | Setting | Description |
 | --- | --- |
 | **Editor source** | **Offline** (bundled webapp, default), **Online** (diagrams.net), or a **Custom URL**. Offline requires the one-time install below — there is no automatic fallback. |
 | **Custom drawio URL** | Used when Editor source is "Custom URL" (e.g. `https://embed.diagrams.net/`). |
-| **New diagram location** | Where the command and ribbon button create diagrams: vault root (default), the current note's folder, or a fixed folder (created if missing). The folder context menu always creates in the clicked folder. |
+| **New diagram location** | Where commands, the ribbon button, and code-block editing create diagrams: vault root (default), the current note's folder, **Subfolder of current note**, or a fixed folder (created if missing). The folder context menu always creates in the clicked folder. |
+| **New diagram subfolder** | Shown for **Subfolder of current note**. Relative folder name, default `attachments`: a diagram for `Notes/note.md` goes into `Notes/attachments/`. Supports nested folders such as `assets/drawio`. |
 | **New diagram format** | `.drawio` (plain XML, default), `.drawio.svg`, or `.drawio.png` — the latter two are standard images with the diagram embedded, viewable anywhere and editable here. |
 | **PNG export scale** | Resolution for saved `.drawio.png` files and PNG exports: 1×, 2× (default), 3×, or 4×. Higher scales produce sharper, larger images. Choose 1× to keep the previous resolution. |
+| **Export margin (pixels)** | Padding on all four sides of SVG/PNG images, including saves and autosaves of `.drawio.svg` / `.drawio.png` files. Default: 24; accepts non-negative integers, with 0 disabling the margin. Changes apply on the next save or plugin export; existing images are not rewritten automatically. |
 | **Open diagram files read-only** | Desktop: show a static preview instead of the embedded editor when opening `.drawio` files — for workflows centred on drawio-desktop. Applies to newly opened tabs. |
 | **Preview click action** | Desktop: what clicking a preview does — **Open built-in editor** (default), **Open in system default app**, **Interactive viewer**, or **Do nothing**. Code blocks have no file, so opening the system default app falls back to the built-in editor. |
 | **Edit button action** | Desktop: shown only when **Preview click action** is **Interactive viewer**. What the viewer's **Edit** button does for file-backed diagrams — the built-in editor or the system default app. Code blocks always use the built-in editor. |

@@ -1,9 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { locateDrawioBlock } from '../src/codeblock/locateBlock';
+import { locateAllDrawioBlocks, locateDrawioBlock, locateDrawioBlockAtLine } from '../src/codeblock/locateBlock';
 
 const split = (s: string) => s.split('\n');
 
 describe('locateDrawioBlock', () => {
+  it.each(['```dio', '~~~dio   '])('recognizes %s for content lookup and cursor-based conversion', (opening) => {
+    const lines = ['# t', opening, '<mxfile/>', opening.slice(0, 3), 'end'];
+    expect(locateDrawioBlock(lines, '<mxfile/>')).toEqual({ start: 1, end: 3 });
+    expect(locateDrawioBlockAtLine(lines, 2)).toEqual({ start: 1, end: 3 });
+  });
+
+  it('identifies matching blocks across both aliases without accepting similar language names', () => {
+    const lines = ['```drawio', 'A', '```', '```dio', 'A', '```', '```diode', 'A', '```'];
+    expect(locateAllDrawioBlocks(lines, 'A')).toEqual([{ start: 0, end: 2 }, { start: 3, end: 5 }]);
+  });
+
   it('locates a single block by body content', () => {
     const doc = ['# t', '```drawio', '<mxfile>A</mxfile>', '```', 'end'].join('\n');
     expect(locateDrawioBlock(split(doc), '<mxfile>A</mxfile>')).toEqual({ start: 1, end: 3 });

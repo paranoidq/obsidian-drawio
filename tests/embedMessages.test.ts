@@ -9,7 +9,19 @@ describe('embedMessages', () => {
 
   it('builds an export-svg message', () => {
     const msg = JSON.parse(buildExportMessage('svg'));
-    expect(msg).toEqual({ action: 'export', format: 'svg' });
+    expect(msg).toEqual({ action: 'export', format: 'svg', border: 24 });
+  });
+
+  it.each(['svg', 'png', 'xmlsvg', 'xmlpng'] as const)('uses the configured margin for %s', (format) => {
+    expect(JSON.parse(buildExportMessage(format, 3, 32))).toEqual({
+      action: 'export', format, border: 32,
+      ...(format === 'png' || format === 'xmlpng' ? { scale: 3 } : {}),
+    });
+    expect(JSON.parse(buildExportMessage(format, 2, 0)).border).toBe(0);
+  });
+
+  it.each([-1, NaN, Infinity, 1.5, Number.MAX_SAFE_INTEGER + 1])('falls back to 24 for invalid margin %s', (border) => {
+    expect(JSON.parse(buildExportMessage('svg', 2, border)).border).toBe(24);
   });
 
   it('builds a configure message that disables compression', () => {

@@ -42,6 +42,46 @@ describe('DrawioSettingTab', () => {
     expect(names).not.toContain('Edit button action');
   });
 
+  it('shows a configurable subfolder relative to the note', () => {
+    Platform.isDesktopApp = true;
+    const saveSettings = vi.fn(async () => {});
+    const plugin = fakePlugin({ saveSettings });
+    plugin.settings.newDiagramLocation = 'current-subfolder';
+    const tab = new DrawioSettingTab({} as never, plugin);
+    tab.display();
+    const row = Array.from(tab.containerEl.querySelectorAll('.setting-item'))
+      .find((el) => el.querySelector('.setting-item-name')?.textContent === 'New diagram subfolder')!;
+    const input = row.querySelector('input')!;
+    expect(input.value).toBe('attachments');
+    input.value = 'assets/drawio';
+    input.dispatchEvent(new Event('input'));
+    expect(plugin.settings.newDiagramSubfolder).toBe('assets/drawio');
+    expect(saveSettings).toHaveBeenCalledTimes(1);
+  });
+
+  it('persists valid export margins and ignores invalid input', () => {
+    Platform.isDesktopApp = true;
+    const saveSettings = vi.fn(async () => {});
+    const plugin = fakePlugin({ saveSettings });
+    const tab = new DrawioSettingTab({} as never, plugin);
+    tab.display();
+    const row = Array.from(tab.containerEl.querySelectorAll('.setting-item'))
+      .find((el) => el.querySelector('.setting-item-name')?.textContent === 'Export margin (pixels)')!;
+    const input = row.querySelector('input')!;
+    expect(input.value).toBe('24');
+    for (const value of ['32', '0']) {
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      expect(plugin.settings.exportBorder).toBe(Number(value));
+    }
+    for (const value of ['', '-1', '1.5']) {
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      expect(plugin.settings.exportBorder).toBe(0);
+    }
+    expect(saveSettings).toHaveBeenCalledTimes(2);
+  });
+
   it('shows Edit button action only when Interactive viewer is selected', () => {
     Platform.isDesktopApp = true;
     const plugin = fakePlugin();

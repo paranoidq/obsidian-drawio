@@ -56,6 +56,25 @@ describe('drawio code block — mobile click behavior', () => {
   const originalIsDesktopApp = Platform.isDesktopApp;
   afterEach(() => { Platform.isDesktopApp = originalIsDesktopApp; });
 
+  it('registers both drawio and dio as equivalent code block processors', async () => {
+    Platform.isDesktopApp = true;
+    const openEditor = vi.fn();
+    const { plugin } = fakePlugin(openEditor);
+    const processors = new Map<string, Processor>();
+    plugin.registerMarkdownCodeBlockProcessor = vi.fn((language, cb) => {
+      processors.set(language, cb as Processor);
+      return cb;
+    });
+    registerDrawioCodeBlock(plugin);
+    expect([...processors.keys()]).toEqual(['drawio', 'dio']);
+    for (const processor of processors.values()) {
+      const el = document.createElement('div');
+      await processor('', el, { sourcePath: 'note.md' });
+      el.querySelector<HTMLButtonElement>('.drawio-create-svg')!.click();
+    }
+    expect(openEditor).toHaveBeenCalledTimes(2);
+  });
+
   it('opens the editor on click on desktop', async () => {
     Platform.isDesktopApp = true;
     const openEditor = vi.fn();
@@ -65,6 +84,20 @@ describe('drawio code block — mobile click behavior', () => {
     await run(XML, el, { sourcePath: 'note.md' });
     el.querySelector('.drawio-codeblock')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(openEditor).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders an empty drawio marker as a create-SVG button', async () => {
+    Platform.isDesktopApp = true;
+    const openEditor = vi.fn();
+    const { plugin, run } = fakePlugin(openEditor);
+    registerDrawioCodeBlock(plugin);
+    const el = document.createElement('div');
+    await run('', el, { sourcePath: 'note.md' });
+    const button = el.querySelector<HTMLButtonElement>('.drawio-create-svg')!;
+    expect(button.textContent).toBe('Create drawio SVG diagram');
+    button.click();
+    expect(openEditor.mock.calls[0]![0].exportFormat()).toBe('xmlsvg');
+    expect(el.querySelector('.drawio-error')).toBeNull();
   });
 
   it('still opens the built-in editor under "defaultApp" (code blocks have no file)', async () => {

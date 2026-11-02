@@ -1,6 +1,6 @@
 {
-  "id": "drawio-editor",
-  "name": "Drawio",
+  "id": "obsidian-drawio-dev",
+  "name": "obsidian-drawio-dev",
   "version": "0.7.2",
   "minAppVersion": "1.4.0",
   "description": "Embed, preview, and edit draw.io diagrams directly in your notes.",

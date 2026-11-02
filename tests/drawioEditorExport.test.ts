@@ -47,9 +47,10 @@ describe('DrawioEditor export round-trip (dual-format sources)', () => {
     }));
   }
 
-  async function mount(source: DrawioSource, exportTimeoutMs?: number, pngScale?: number) {
+  async function mount(source: DrawioSource, exportTimeoutMs?: number, pngScale?: number, exportBorder?: () => number) {
     editor = new DrawioEditor(container, source, {
       ...makeDeps(), pngExportScale: () => pngScale ?? 2,
+      exportBorder,
     }, { onExit, exportTimeoutMs });
     await editor.mount();
     const cw = container.querySelector('iframe')!.contentWindow!;
@@ -76,7 +77,7 @@ describe('DrawioEditor export round-trip (dual-format sources)', () => {
     await mount(source);
     dispatch({ event: 'save', xml: '<mxfile/>' });
     await flush();
-    expect(posts).toContainEqual(JSON.stringify({ action: 'export', format: 'xmlsvg' }));
+    expect(posts).toContainEqual(JSON.stringify({ action: 'export', format: 'xmlsvg', border: 24 }));
     expect(writes).toEqual([]); // nothing persisted until the export reply
   });
 
@@ -129,7 +130,25 @@ describe('DrawioEditor export round-trip (dual-format sources)', () => {
     await mount(source, undefined, 3);
     dispatch({ event: 'save', xml: '<mxfile/>' });
     await flush();
-    expect(posts.map((p) => JSON.parse(p))).toContainEqual({ action: 'export', format: 'xmlpng', scale: 3 });
+    expect(posts.map((p) => JSON.parse(p))).toContainEqual({ action: 'export', format: 'xmlpng', border: 24, scale: 3 });
+  });
+
+  it.each(['xmlsvg', 'xmlpng'] as const)('uses the latest configured margin for %s autosaves', async (format) => {
+    const { source } = makeExportingSource();
+    source.exportFormat = () => format;
+    let border = 32;
+    await mount(source, undefined, 2, () => border);
+    dispatch({ event: 'autosave', xml: '<mxfile/>' });
+    await flush();
+    expect(posts.map((p) => JSON.parse(p))).toContainEqual({
+      action: 'export', format, border: 32, ...(format === 'xmlpng' ? { scale: 2 } : {}),
+    });
+    dispatch({ event: 'export', data: 'image' });
+    await flush();
+    border = 0;
+    dispatch({ event: 'autosave', xml: '<mxfile/>' });
+    await flush();
+    expect(JSON.parse(posts[posts.length - 1]!)).toMatchObject({ action: 'export', border: 0 });
   });
 
   it('coalesces edits arriving during a slow vault write before acknowledging', async () => {
